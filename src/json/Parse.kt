@@ -12,10 +12,10 @@ class Parse(val json: String) {
     }
 
     private fun isComplete(): Boolean {
-        return index == json.length
+        return index >= json.length
     }
 
-    fun parse(): Type {
+    fun parse(): JSONType {
         parseWhiteSpace()
         val type = parseValue()
         if (!isComplete())
@@ -27,19 +27,19 @@ class Parse(val json: String) {
     }
 
 
-    fun parseValue(): Type {
+    fun parseValue(): JSONType {
         when (peek()) {
             'n' -> {
                 parseNull()
-                return Type.NLLL
+                return JSONType.NULL
             }
             'f' -> {
                 parseFalse()
-                return Type.FALSE
+                return JSONType.FALSE
             }
             't' -> {
                 parseTrue()
-                return Type.TRUE
+                return JSONType.TRUE
             }
             else -> throw RuntimeException("invalid value")
         }
@@ -61,8 +61,8 @@ class Parse(val json: String) {
     }
 
     fun parseTrue() {
-        checkEqual("true", 5)
-        pop(5)
+        checkEqual("true", 4)
+        pop(4)
     }
 
     private fun checkEqual(expect: String, length: Int) {

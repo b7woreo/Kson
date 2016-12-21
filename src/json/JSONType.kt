@@ -1,7 +1,7 @@
 package json
 
-enum class Type {
-    NLLL,
+enum class JSONType {
+    NULL,
     FALSE,
     TRUE,
     NUMBER,
