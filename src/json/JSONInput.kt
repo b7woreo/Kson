@@ -13,6 +13,6 @@ class JSONInput(input: String) {
     }
 
     fun hasNext(): Boolean {
-        return index == json.length
+        return index < json.length
     }
 }

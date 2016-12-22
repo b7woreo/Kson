@@ -30,6 +30,8 @@ class Test() {
                     if (e.targetException is AssertException) {
                         println(String.format(FORMAT_FAILURE, clz.qualifiedName, it.name, e.targetException.message))
                         failure += 1
+                    } else {
+                        throw e
                     }
                 }
             }
