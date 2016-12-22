@@ -19,6 +19,7 @@ class JSONParse(val json: JSONInput) {
             'n' -> return parseNull()
             'f' -> return parseFalse()
             't' -> return parseTrue()
+            '"' -> return parseString()
             else -> return parseNumber()
         }
     }
@@ -62,5 +63,17 @@ class JSONParse(val json: JSONInput) {
         }
         val n = builder.toString().toDouble()
         return JSONType.Number(n)
+    }
+
+    private fun parseString(): JSONType.String {
+        val builder = StringBuilder()
+        json.next()
+        var c = json.peek()
+        while (c != '"') {
+            builder.append(json.next())
+            c = json.peek()
+        }
+        json.next()
+        return JSONType.String(builder.toString())
     }
 }

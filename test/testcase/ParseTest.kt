@@ -25,4 +25,9 @@ class ParseTest {
         val p = JSONParse(JSONInput("123"))
         assertEqual(JSONType.Number(123.0).value, p.parse().value!!)
     }
+
+    fun testParseString() {
+        val p = JSONParse(JSONInput("\"Hello\""))
+        assertEqual(JSONType.String("Hello").value, p.parse().value!!)
+    }
 }
