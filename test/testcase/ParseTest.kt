@@ -1,22 +1,23 @@
 package testcase
 
+import json.JSONInput
+import json.JSONParse
 import json.JSONType
-import json.Parse
 import test.assertEqual
 
 class ParseTest {
     fun testParseNull() {
-        val p = Parse("null")
-        assertEqual(JSONType.NULL, p.parse())
+        val p = JSONParse(JSONInput("null"))
+        assertEqual(JSONType.Null, p.parse())
     }
 
     fun testParseFalse() {
-        val p = Parse("false")
-        assertEqual(JSONType.FALSE, p.parse())
+        val p = JSONParse(JSONInput("false"))
+        assertEqual(JSONType.Boolean(false).value, p.parse().value!!)
     }
 
     fun testParseTrue() {
-        val p = Parse("true")
-        assertEqual(JSONType.TRUE, p.parse().name)
+        val p = JSONParse(JSONInput("true"))
+        assertEqual(JSONType.Boolean(true).value, p.parse().value!!)
     }
 }
