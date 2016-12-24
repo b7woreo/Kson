@@ -61,6 +61,4 @@ fun <T : Exception> assertError(except: Class<T>, test: () -> Unit) {
     }
 }
 
-class AssertException(message: String) : RuntimeException(message) {
-
-}
+class AssertException(message: String) : RuntimeException(message)

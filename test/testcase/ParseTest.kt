@@ -7,6 +7,8 @@ import test.assertEqual
 import test.assertError
 
 class ParseTest {
+    private val jsonParse = JSONParse()
+
     fun testParseNull() {
         assertEqual(JSONType.Null, input("null"))
     }
@@ -17,8 +19,7 @@ class ParseTest {
     }
 
     fun testParseTrue() {
-        val p = JSONParse(JSONInput("true"))
-        assertEqual(JSONType.Boolean(true).value, p.parse().value!!)
+        assertEqual(JSONType.Boolean(true).value, input("true").value!!)
     }
 
     fun testParseNumber() {
@@ -44,7 +45,22 @@ class ParseTest {
         assertEqual(JSONType.String("Hello").value, input("\"Hello\"").value!!)
     }
 
+    fun testParseArray() {
+        val v1 = input("[ null , false , true , 123 , \"abc\" ]").value!! as Array<JSONType<*>>
+        assertEqual(JSONType.Null, v1[0])
+        assertEqual(false, v1[1].value!!)
+        assertEqual(true, v1[2].value!!)
+        assertEqual(123.0, v1[3].value!!)
+        assertEqual("abc", v1[4].value!!)
+
+        val v2 = input("[ [ ] , [ 0 ] , [ 0 , 1 ] , [ 0 , 1 , 2 ] ]").value!! as Array<JSONType<*>>
+        assertEqual(0, (v2[0].value!! as Array<*>).size)
+        assertEqual(1, (v2[1].value!! as Array<*>).size)
+        assertEqual(2, (v2[2].value!! as Array<*>).size)
+        assertEqual(3, (v2[3].value!! as Array<*>).size)
+    }
+
     private fun input(json: String): JSONType<*> {
-        return JSONParse(JSONInput(json)).parse()
+        return jsonParse.parse(JSONInput(json))
     }
 }

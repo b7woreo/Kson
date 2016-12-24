@@ -8,11 +8,11 @@ class JSONInput(input: String) {
         return json[index]
     }
 
-    fun next(): Char {
+    fun pop(): Char {
         return json[index++]
     }
 
-    fun hasNext(): Boolean {
-        return index < json.length
+    fun isEmpty(): Boolean {
+        return index == json.length
     }
 }
