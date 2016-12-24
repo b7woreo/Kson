@@ -24,8 +24,10 @@ class Test() {
 
             clz.declaredMemberFunctions.forEach { it ->
                 try {
-                    it.call(t)
-                    success += 1
+                    if (it.name.startsWith("test") && it.parameters.size == 1) {
+                        it.call(t)
+                        success += 1
+                    }
                 } catch (e: InvocationTargetException) {
                     if (e.targetException is AssertException) {
                         println(String.format(FORMAT_FAILURE, clz.qualifiedName, it.name, e.targetException.message))
@@ -45,6 +47,17 @@ class Test() {
 fun assertEqual(except: Any, actual: Any) {
     if (except != actual) {
         throw AssertException("except: " + except.toString() + ", actual: " + actual)
+    }
+}
+
+fun <T : Exception> assertError(except: Class<T>, test: () -> Unit) {
+    try {
+        test()
+        throw RuntimeException()
+    } catch (e: RuntimeException) {
+        if (e.javaClass != except) {
+            throw AssertException("except error: " + except.name)
+        }
     }
 }
 

@@ -4,16 +4,16 @@ import json.JSONInput
 import json.JSONParse
 import json.JSONType
 import test.assertEqual
+import test.assertError
 
 class ParseTest {
     fun testParseNull() {
-        val p = JSONParse(JSONInput("null"))
-        assertEqual(JSONType.Null, p.parse())
+        assertEqual(JSONType.Null, input("null"))
     }
 
     fun testParseFalse() {
-        val p = JSONParse(JSONInput("false"))
-        assertEqual(JSONType.Boolean(false).value, p.parse().value!!)
+        assertEqual(false, input("false").value!!)
+
     }
 
     fun testParseTrue() {
@@ -22,12 +22,29 @@ class ParseTest {
     }
 
     fun testParseNumber() {
-        val p = JSONParse(JSONInput("123"))
-        assertEqual(JSONType.Number(123.0).value, p.parse().value!!)
+        assertEqual(0.0, input("0").value!!)
+        assertEqual(-0.0, input("-0").value!!)
+        assertEqual(-0.0, input("-0.0").value!!)
+        assertEqual(1.0, input("1").value!!)
+        assertEqual(-1.0, input("-1").value!!)
+        assertEqual(1.5, input("1.5").value!!)
+        assertEqual(-1.5, input("-1.5").value!!)
+        assertEqual(3.1416, input("3.1416").value!!)
+        assertEqual(1.5, input("1.5").value!!)
+        assertEqual(1.5, input("1.5").value!!)
+        assertError(IllegalArgumentException::class.java) {
+            input("NAN")
+        }
+        assertError(IllegalArgumentException::class.java) {
+            input("INF")
+        }
     }
 
     fun testParseString() {
-        val p = JSONParse(JSONInput("\"Hello\""))
-        assertEqual(JSONType.String("Hello").value, p.parse().value!!)
+        assertEqual(JSONType.String("Hello").value, input("\"Hello\"").value!!)
+    }
+
+    private fun input(json: String): JSONType<*> {
+        return JSONParse(JSONInput(json)).parse()
     }
 }

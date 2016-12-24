@@ -35,7 +35,7 @@ class JSONParse(val json: JSONInput) {
         if (json.next() == 'n' && json.next() == 'u' && json.next() == 'l' && json.next() == 'l') {
             return JSONType.Null
         }
-        throw RuntimeException("invalid value")
+        throw IllegalArgumentException("invalid value")
     }
 
     private fun parseFalse(): JSONType.Boolean {
@@ -43,14 +43,14 @@ class JSONParse(val json: JSONInput) {
                 && json.next() == 's' && json.next() == 'e') {
             return JSONType.Boolean(false)
         }
-        throw RuntimeException("invalid value")
+        throw IllegalArgumentException("invalid value")
     }
 
     private fun parseTrue(): JSONType.Boolean {
         if (json.next() == 't' && json.next() == 'r' && json.next() == 'u' && json.next() == 'e') {
             return JSONType.Boolean(true)
         }
-        throw RuntimeException("invalid value")
+        throw IllegalArgumentException("invalid value")
     }
 
     private fun parseNumber(): JSONType.Number {
@@ -61,8 +61,12 @@ class JSONParse(val json: JSONInput) {
             if (!json.hasNext()) break
             c = json.peek()
         }
-        val n = builder.toString().toDouble()
-        return JSONType.Number(n)
+        try {
+            val n = builder.toString().toDouble()
+            return JSONType.Number(n)
+        } catch (e: NumberFormatException) {
+            throw IllegalArgumentException("invalid value")
+        }
     }
 
     private fun parseString(): JSONType.String {
