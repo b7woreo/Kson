@@ -23,6 +23,7 @@ class JSONParse {
             't' -> return parseTrue(input)
             '"' -> return parseString(input)
             '[' -> return parseArray(input)
+            '{' -> return parseObject(input)
             else -> return parseNumber(input)
         }
     }
@@ -119,5 +120,53 @@ class JSONParse {
         }
 
         return JSONType.Array(values.toArray(Array<JSONType<*>>(values.size, { JSONType.Null })))
+    }
+
+    private fun parseObject(input: JSONInput): JSONType.Object {
+        assert(input.peek() == '{')
+        val stack = ArrayDeque<Char>()
+        stack.push(input.pop())
+        val values = HashMap<String, JSONType<*>>()
+        var builder = StringBuilder()
+
+        while (stack.isNotEmpty()) {
+            if (input.isEmpty()) throw IllegalArgumentException("invalid value")
+
+            val c = input.pop()
+            if (c == '{') {
+                stack.push(c)
+                builder.append(c)
+            } else if (c == '}') {
+                stack.pop()
+                if (stack.isEmpty()) {
+                    if (builder.isBlank()) {
+                        break
+                    }
+                    val (k, v) = parseField(builder.toString())
+                    values.put(k, v)
+                } else {
+                    builder.append(c)
+                }
+            } else if (c == ',' && stack.size == 1) {
+                val (k, v) = parseField(builder.toString())
+                values.put(k, v)
+                builder = StringBuilder()
+            } else {
+                builder.append(c)
+            }
+        }
+
+        return JSONType.Object(values)
+    }
+
+    private fun parseField(input: String): Pair<String, JSONType<*>> {
+        val index = input.indexOf(':')
+        val keyString = input.substring(0, index).trim()
+        assert(keyString.length > 1)
+        assert(keyString[0] == '"')
+        assert(keyString[keyString.length - 1] == '"')
+        val key = keyString.substring(1, keyString.length - 1)
+        val value = parse(JSONInput(input.substring(index + 1)))
+        return Pair(key, value)
     }
 }

@@ -60,6 +60,16 @@ class ParseTest {
         assertEqual(3, (v2[3].value!! as Array<*>).size)
     }
 
+    fun testParseObject() {
+        val v1 = input("{\"1\":1,\"2\":2,\"3\":3}").value!! as Map<String, JSONType<*>>
+        assertEqual(true, v1.containsKey("1"))
+        assertEqual(1.0, v1.get("1")?.value as Double)
+        assertEqual(true, v1.containsKey("2"))
+        assertEqual(2.0, v1.get("2")?.value as Double)
+        assertEqual(true, v1.containsKey("3"))
+        assertEqual(3.0, v1.get("3")?.value as Double)
+    }
+
     private fun input(json: String): JSONType<*> {
         return jsonParse.parse(JSONInput(json))
     }
