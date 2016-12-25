@@ -1,13 +1,13 @@
 package testcase
 
-import json.JSONParse
+import parse.Kson
 import test.assertEqual
 import test.assertError
 import test.assertNull
 import java.util.*
 
 class ParseTest {
-    private val jsonParse = JSONParse()
+    private val jsonParse = Kson()
 
     fun testParseNull() {
         assertNull(input("null"))

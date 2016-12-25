@@ -1,8 +1,8 @@
-package json
+package parse
 
 import java.util.*
 
-class JSONParse {
+class Kson {
 
     fun parse(input: String): Any? {
         val pureInput = input.trim()
