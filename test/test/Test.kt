@@ -51,6 +51,12 @@ fun assertEqual(except: Any, actual: Any) {
     }
 }
 
+fun assertNull(actual: Any?) {
+    if (actual != null) {
+        throw AssertException("except: null" + ", actual: " + actual)
+    }
+}
+
 fun <T : Exception> assertError(except: Class<T>, test: () -> Unit) {
     try {
         test()

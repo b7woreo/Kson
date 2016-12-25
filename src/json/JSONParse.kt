@@ -4,23 +4,17 @@ import java.util.*
 
 class JSONParse {
 
-    fun parse(input: JSONInput): JSONType<*> {
-        parseWhiteSpace(input)
-        val type = parseValue(input)
-        if (!input.isEmpty())
-            parseWhiteSpace(input)
-        if (!input.isEmpty()) {
-            throw RuntimeException("root not single")
-        }
-        return type
+    fun parse(input: String): Any? {
+        val pureInput = input.trim()
+        return parseValue(pureInput)
     }
 
 
-    private fun parseValue(input: JSONInput): JSONType<*> {
-        when (input.peek()) {
+    private fun parseValue(input: String): Any? {
+        when (input[0]) {
             'n' -> return parseNull(input)
-            'f' -> return parseFalse(input)
-            't' -> return parseTrue(input)
+            'f' -> return parseBoolean(input)
+            't' -> return parseBoolean(input)
             '"' -> return parseString(input)
             '[' -> return parseArray(input)
             '{' -> return parseObject(input)
@@ -28,145 +22,131 @@ class JSONParse {
         }
     }
 
-    private fun parseWhiteSpace(input: JSONInput) {
-        while (input.peek() == '\t' || input.peek() == '\n' || input.peek() == '\r' || input.peek() == ' ') {
-            input.pop()
-            if (input.isEmpty()) break
+    private fun parseNull(input: String): Any? {
+        if (input == "null") {
+            return null
         }
+        throw IllegalArgumentException("invalid value, not a null: " + input)
     }
 
-    private fun parseNull(input: JSONInput): JSONType.Null {
-        if (input.pop() == 'n' && input.pop() == 'u' && input.pop() == 'l' && input.pop() == 'l') {
-            return JSONType.Null
-        }
-        throw IllegalArgumentException("invalid value")
-    }
-
-    private fun parseFalse(input: JSONInput): JSONType.Boolean {
-        if (input.pop() == 'f' && input.pop() == 'a' && input.pop() == 'l'
-                && input.pop() == 's' && input.pop() == 'e') {
-            return JSONType.Boolean(false)
-        }
-        throw IllegalArgumentException("invalid value")
-    }
-
-    private fun parseTrue(input: JSONInput): JSONType.Boolean {
-        if (input.pop() == 't' && input.pop() == 'r' && input.pop() == 'u' && input.pop() == 'e') {
-            return JSONType.Boolean(true)
-        }
-        throw IllegalArgumentException("invalid value")
-    }
-
-    private fun parseNumber(input: JSONInput): JSONType.Number {
-        val builder = StringBuilder()
-        var c = input.peek()
-        while (('0' <= c && c <= '9') || c == '.' || c == '-') {
-            builder.append(input.pop())
-            if (input.isEmpty()) break
-            c = input.peek()
-        }
+    private fun parseBoolean(input: String): Boolean {
         try {
-            val n = builder.toString().toDouble()
-            return JSONType.Number(n)
+            return input.toBoolean()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("invalid value, not a boolean: " + input)
+        }
+    }
+
+    private fun parseNumber(input: String): Double {
+        try {
+            return input.toDouble()
         } catch (e: NumberFormatException) {
-            throw IllegalArgumentException("invalid value")
+            throw IllegalArgumentException("invalid value, not a number: " + input)
         }
     }
 
-    private fun parseString(input: JSONInput): JSONType.String {
-        val builder = StringBuilder()
-        input.pop()
-        var c = input.peek()
-        while (c != '"') {
-            builder.append(input.pop())
-            c = input.peek()
+    private fun parseString(input: String): String {
+        if (input.length > 1 && input[0] == '"' && input[input.length - 1] == '"') {
+            return input.substring(1, input.length - 1)
         }
-        input.pop()
-        return JSONType.String(builder.toString())
+        throw IllegalArgumentException("invalid value, not a string: " + input)
     }
 
-    private fun parseArray(input: JSONInput): JSONType.Array {
-        assert(input.peek() == '[')
-        val stack = ArrayDeque<Char>()
-        stack.push(input.pop())
-        val values = ArrayList<JSONType<*>>()
-        var builder = StringBuilder()
+    private fun parseArray(input: String): ArrayList<*> {
+        if (input.length < 2 || input[0] != '[' || input[input.length - 1] != ']')
+            throw IllegalArgumentException("invalid value, not a array: " + input)
 
-        while (!stack.isEmpty()) {
-            if (input.isEmpty()) throw IllegalArgumentException("invalid value")
+        if (input.substring(1, input.length - 1).isBlank())
+            return ArrayList<Any?>()
 
-            val c = input.pop()
+        // left parenthesis count
+        var lpc = 1
+        val values = ArrayList<Any?>()
+
+        var start = 1
+        var index = 1
+        while (lpc != 0) {
+            if (index == input.length)
+                throw IllegalArgumentException("invalid value, lack ]")
+
+            val c = input[index++]
             if (c == '[') {
-                stack.push(c)
-                builder.append(c)
-            } else if (c == ']') {
-                stack.pop()
-                if (stack.isEmpty()) {
-                    if (builder.isBlank()) {
-                        return JSONType.Array(Array<JSONType<*>>(0, { JSONType.Null }))
-                    }
-                    val type = parse(JSONInput(builder.toString()))
-                    values.add(type)
-                } else {
-                    builder.append(']')
+                lpc++
+                continue
+            }
+            if (c == ']') {
+                lpc--
+                if (lpc == 0) {
+                    val o = parse(input.substring(start, index - 1))
+                    values.add(o)
                 }
-            } else if (c == ',' && stack.size == 1) {
-                val type = parse(JSONInput(builder.toString()))
-                values.add(type)
-                builder = StringBuilder()
-            } else {
-                builder.append(c)
+                continue
+            }
+            if (c == ',' && lpc == 1) {
+                val o = parse(input.substring(start, index - 1))
+                values.add(o)
+                start = index
+                continue
             }
         }
 
-        return JSONType.Array(values.toArray(Array<JSONType<*>>(values.size, { JSONType.Null })))
+        if (index != input.length)
+            throw IllegalArgumentException("root not single")
+        return values
     }
 
-    private fun parseObject(input: JSONInput): JSONType.Object {
-        assert(input.peek() == '{')
-        val stack = ArrayDeque<Char>()
-        stack.push(input.pop())
-        val values = HashMap<String, JSONType<*>>()
-        var builder = StringBuilder()
+    private fun parseObject(input: String): Map<String, *> {
+        if (input.length < 2 || input[0] != '{' || input[input.length - 1] != '}')
+            throw IllegalArgumentException("invalid value, not a object: " + input)
 
-        while (stack.isNotEmpty()) {
-            if (input.isEmpty()) throw IllegalArgumentException("invalid value")
+        if (input.substring(1, input.length - 1).isBlank())
+            return HashMap<String, Any>()
 
-            val c = input.pop()
+        // left parenthesis count
+        var lpc = 1
+        val values = HashMap<String, Any?>()
+
+        var start = 1
+        var index = 1
+        while (lpc != 0) {
+            if (index == input.length)
+                throw IllegalArgumentException("invalid value, lack }")
+
+            val c = input[index++]
             if (c == '{') {
-                stack.push(c)
-                builder.append(c)
-            } else if (c == '}') {
-                stack.pop()
-                if (stack.isEmpty()) {
-                    if (builder.isBlank()) {
-                        break
-                    }
-                    val (k, v) = parseField(builder.toString())
+                lpc++
+                continue
+            }
+            if (c == '}') {
+                lpc--
+                if (lpc == 0) {
+                    val (k, v) = parseField(input.substring(start, index - 1))
                     values.put(k, v)
-                } else {
-                    builder.append(c)
                 }
-            } else if (c == ',' && stack.size == 1) {
-                val (k, v) = parseField(builder.toString())
+                continue
+            }
+            if (c == ',' && lpc == 1) {
+                val (k, v) = parseField(input.substring(start, index - 1))
                 values.put(k, v)
-                builder = StringBuilder()
-            } else {
-                builder.append(c)
+                start = index
+                continue
             }
         }
 
-        return JSONType.Object(values)
+        if (index != input.length)
+            throw IllegalArgumentException("root not single")
+        return values
     }
 
-    private fun parseField(input: String): Pair<String, JSONType<*>> {
+    private fun parseField(input: String): Pair<String, *> {
         val index = input.indexOf(':')
-        val keyString = input.substring(0, index).trim()
-        assert(keyString.length > 1)
-        assert(keyString[0] == '"')
-        assert(keyString[keyString.length - 1] == '"')
-        val key = keyString.substring(1, keyString.length - 1)
-        val value = parse(JSONInput(input.substring(index + 1)))
+
+        val key = parse(input.substring(0, index))
+        if (!(key is String))
+            throw  IllegalArgumentException("invalid key: " + input.substring(0, index))
+
+        val value = parse(input.substring(index + 1, input.length))
+
         return Pair(key, value)
     }
 }
