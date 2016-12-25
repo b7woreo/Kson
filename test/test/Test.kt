@@ -29,11 +29,12 @@ class Test() {
                         success += 1
                     }
                 } catch (e: InvocationTargetException) {
-                    if (e.targetException is AssertException) {
+                    val targetException = e.targetException
+                    if (targetException is AssertException) {
                         println(String.format(FORMAT_FAILURE, clz.qualifiedName, it.name, e.targetException.message))
                         failure += 1
                     } else {
-                        throw e
+                        throw targetException
                     }
                 }
             }
